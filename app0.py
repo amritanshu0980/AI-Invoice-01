@@ -2185,9 +2185,13 @@ def get_fallback_response(message, session_data, products):
         return "❌ AI offline. Product not found in cart. Say 'show cart' to see current items.", None
     
     # Handle CART commands
-    elif any(word in message_lower for word in ['cart', 'show cart', 'view cart', 'cart breakdown', 'breakdown']):
+    elif any(word in message_lower for word in ['cart', 'show cart', 'view cart']):
         print("🔍 Detected CART command in fallback")
         return show_cart_formatted(session_data), {"action": "show_cart"}
+    
+    elif any(word in message_lower for word in [ 'cart breakdown', 'breakdown', 'detailed breakdown', 'detailed pricing', "show bill"]):
+        print("🔍 Detected CART command in fallback")
+        return show_cart_detailed_breakdown(session_data), {"action": "show_cart_breakdown"}
     
     # Handle PRODUCTS commands
     elif any(word in message_lower for word in ['products', 'catalog', 'list products', 'show products', 'available']):
