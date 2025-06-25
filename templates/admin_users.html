@@ -1,0 +1,343 @@
+<!-- This is what your templates/admin_users.html should contain -->
+<div class="section-header">
+    <div class="header-left">
+        <h2>User Management</h2>
+        <span class="section-subtitle">Manage system users and permissions</span>
+    </div>
+    <div class="header-actions">
+        <button class="btn-secondary" onclick="refreshUsers()">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+        </button>
+        <button class="btn-primary" onclick="openAddUserModal()">
+            <i class="fas fa-user-plus"></i>
+            Add User
+        </button>
+    </div>
+</div>
+
+<!-- Users Stats Cards -->
+<div class="users-stats-grid">
+    <div class="stat-card total-users">
+        <div class="stat-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value" id="totalUsersCount">0</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+    </div>
+    <div class="stat-card active-users">
+        <div class="stat-icon">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value" id="activeUsersCount">0</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+    </div>
+    <div class="stat-card admin-users">
+        <div class="stat-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value" id="adminUsersCount">0</div>
+            <div class="stat-label">Administrators</div>
+        </div>
+    </div>
+    <div class="stat-card new-users">
+        <div class="stat-icon">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value" id="newUsersCount">0</div>
+            <div class="stat-label">New This Month</div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table Section -->
+<div class="users-table-section">
+    <div class="table-header">
+        <div class="table-title">
+            <h3>All Users</h3>
+            <span class="table-subtitle" id="usersTableSubtitle">Showing all users in the system</span>
+        </div>
+        <div class="table-controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="userSearchInput" placeholder="Search users...">
+            </div>
+            <div class="filter-dropdown">
+                <select id="roleFilter">
+                    <option value="all">All Roles</option>
+                    <option value="super_admin">Super Admin</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="filter-dropdown">
+                <select id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="users-table-container">
+        <table class="users-table" id="usersTable">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <!-- Users will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Loading State -->
+    <div class="table-loading" id="usersTableLoading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading users...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="table-empty" id="usersTableEmpty" style="display: none;">
+        <div class="empty-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <h3>No Users Found</h3>
+        <p>There are no users matching your search criteria.</p>
+        <button class="btn-primary" onclick="openAddUserModal()">
+            <i class="fas fa-user-plus"></i>
+            Add First User
+        </button>
+    </div>
+
+    <!-- Table Pagination -->
+    <div class="table-pagination" id="usersPagination">
+        <div class="pagination-info">
+            Showing <span id="paginationStart">1</span> to <span id="paginationEnd">10</span> of <span id="paginationTotal">0</span> users
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" id="prevPage" onclick="changePage(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="pagination-numbers" id="paginationNumbers">
+                <!-- Page numbers will be populated by JavaScript -->
+            </div>
+            <button class="pagination-btn" id="nextPage" onclick="changePage(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- User Management Modals -->
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addUserModal">
+    <div class="modal large-modal">
+        <div class="modal-header">
+            <h3>Add New User</h3>
+            <button class="modal-close" onclick="closeAddUserModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addUserForm" class="user-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="userFullName">Full Name *</label>
+                        <input type="text" id="userFullName" name="full_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userUsername">Username *</label>
+                        <input type="text" id="userUsername" name="username" required>
+                        <span class="form-hint">Username must be unique</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email *</label>
+                        <input type="email" id="userEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhone">Phone</label>
+                        <input type="tel" id="userPhone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="userDepartment">Department</label>
+                        <select id="userDepartment" name="department">
+                            <option value="">Select Department</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Operations">Operations</option>
+                            <option value="IT">IT</option>
+                            <option value="HR">HR</option>
+                            <option value="Management">Management</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Role *</label>
+                        <select id="userRole" name="role" required>
+                            <!-- Options will be populated based on current user's role -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="password-section">
+                    <h4>Password Settings</h4>
+                    <div class="form-group">
+                        <label for="tempPassword">Temporary Password *</label>
+                        <div class="password-input-group">
+                            <input type="password" id="tempPassword" name="temp_password" required>
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('tempPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="generate-password" onclick="generateTempPassword()">
+                                <i class="fas fa-random"></i>
+                                Generate
+                            </button>
+                        </div>
+                        <span class="form-hint">User will be required to change this password on first login</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editUserModal">
+    <div class="modal large-modal">
+        <div class="modal-header">
+            <h3>Edit User</h3>
+            <button class="modal-close" onclick="closeEditUserModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="editUserForm" class="user-form">
+                <input type="hidden" id="editUserId" name="user_id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editUserFullName">Full Name *</label>
+                        <input type="text" id="editUserFullName" name="full_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserUsername">Username *</label>
+                        <input type="text" id="editUserUsername" name="username" required disabled>
+                        <span class="form-hint">Username cannot be changed</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserEmail">Email *</label>
+                        <input type="email" id="editUserEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserPhone">Phone</label>
+                        <input type="tel" id="editUserPhone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserDepartment">Department</label>
+                        <select id="editUserDepartment" name="department">
+                            <option value="">Select Department</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Operations">Operations</option>
+                            <option value="IT">IT</option>
+                            <option value="HR">HR</option>
+                            <option value="Management">Management</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserRole">Role *</label>
+                        <select id="editUserRole" name="role" required>
+                            <!-- Options will be populated based on current user's role -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserStatus">Status *</label>
+                        <select id="editUserStatus" name="status" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="password-section">
+                    <h4>Reset Password</h4>
+                    <div class="form-group">
+                        <label for="resetPassword">New Temporary Password</label>
+                        <div class="password-input-group">
+                            <input type="password" id="resetPassword" name="reset_password">
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('resetPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="generate-password" onclick="generateResetPassword()">
+                                <i class="fas fa-random"></i>
+                                Generate
+                            </button>
+                        </div>
+                        <span class="form-hint">Leave blank to keep current password. User will be required to change on next login if set.</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEditUserModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div class="modal-overlay" id="deleteUserModal">
+    <div class="modal small-modal">
+        <div class="modal-header">
+            <h3>Delete User</h3>
+            <button class="modal-close" onclick="closeDeleteUserModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-confirmation">
+                <div class="delete-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4>Are you sure?</h4>
+                <p>You are about to delete user <strong id="deleteUserName"></strong>. This action cannot be undone.</p>
+                <div class="delete-actions">
+                    <button type="button" class="btn-secondary" onclick="closeDeleteUserModal()">Cancel</button>
+                    <button type="button" class="btn-danger" onclick="confirmDeleteUser()">
+                        <i class="fas fa-trash"></i>
+                        Delete User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

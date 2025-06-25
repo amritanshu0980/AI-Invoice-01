@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Invoice Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="static\styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="new-chat-btn" id="newChatBtn">
+            <i class="fas fa-plus"></i>
+            <span>New Chat</span>
+        </button>
+    </div>
+
+    <div class="sidebar-content">
+        <!-- Chat History -->
+        <div class="chat-history">
+            <div class="section-title">Recent Chats</div>
+            <div class="chat-list" id="chatList">
+                <div class="chat-item placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading chats...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="section-title">Quick Actions</div>
+            <button class="action-btn" onclick="openUploadModal()">
+                <i class="fas fa-upload"></i>
+                <span>Upload Catalog</span>
+            </button>
+            <button class="action-btn" onclick="showCartSummary()">
+                <i class="fas fa-shopping-cart"></i>
+                <span>View Cart</span>
+            </button>
+            <button class="action-btn" onclick="showAllProducts()">
+                <i class="fas fa-boxes"></i>
+                <span>Show All Products</span>
+            </button>
+            <button class="action-btn" onclick="openClientModal()">
+                <i class="fas fa-user"></i>
+                <span>Client Details</span>
+            </button>
+            <!-- NEW: User Guide Button -->
+            <button class="action-btn" onclick="showUserGuide()">
+                <i class="fas fa-book"></i>
+                <span>User Guide</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+        <div class="stats-mini">
+            <div class="stat-item">
+                <span class="stat-label">Products</span>
+                <span class="stat-value" id="sidebarProductCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Cart Items</span>
+                <span class="stat-value" id="sidebarCartCount">0</span>
+            </div>
+        </div>
+        
+        <!-- Settings Dropdown Container -->
+        <div class="settings-container">
+            <!-- Settings Dropdown Panel -->
+            <div class="settings-dropdown" id="settingsDropdown">
+                <!-- User Info Section -->
+                <div class="settings-section user-info">
+                    <div class="user-avatar" id="userAvatar">
+                        <span id="userInitials">U</span>
+                    </div>
+                    <div class="user-details">
+                        <div class="username" id="settingsUsername">Loading...</div>
+                        <div class="user-role" id="settingsUserRole">User</div>
+                    </div>
+                </div>
+                
+                <!-- Divider -->
+                <div class="settings-divider"></div>
+                
+                <!-- Theme Toggle Section -->
+                <div class="settings-section">
+                    <button class="settings-item theme-toggle-setting" onclick="invoiceApp.toggleTheme()">
+                        <div class="settings-item-icon">
+                            <i class="fas fa-moon" id="settingsThemeIcon"></i>
+                        </div>
+                        <div class="settings-item-content">
+                            <span class="settings-item-title">Theme</span>
+                            <span class="settings-item-subtitle" id="themeStatus">Dark</span>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Divider -->
+                <div class="settings-divider"></div>
+                
+                <!-- Logout Section -->
+                <div class="settings-section">
+                    <button class="settings-item logout-item" onclick="invoiceApp.handleLogout()">
+                        <div class="settings-item-icon">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="settings-item-content">
+                            <span class="settings-item-title">Logout</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Settings Button -->
+            <button class="settings-btn" id="settingsBtn" onclick="invoiceApp.toggleSettingsDropdown()">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </div>
+    </div>
+</aside>
+<!-- Logout Confirmation Modal -->
+<div class="modal-overlay" id="logoutModal">
+    <div class="modal logout-modal">
+        <div class="modal-header">
+            <h2><i class="fas fa-sign-out-alt"></i> Confirm Logout</h2>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to logout? This will clear your current session and cart data.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="invoiceApp.closeLogoutModal()">Cancel</button>
+            <button type="button" class="btn-primary logout-confirm" onclick="invoiceApp.confirmLogout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="app-title">
+                        <h1>AI Invoice Assistant</h1>
+                        <div class="connection-status" id="connectionStatus">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="statusText">Connecting...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="cart-summary" id="cartSummary">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="headerCartCount">0</span>
+                    </div>
+                    <button class="download-btn" id="downloadChatBtn" onclick="downloadCurrentChat()">
+                        <i class="fas fa-download"></i>
+                        <span class="download-text">Download PDF</span>
+                    </button>
+                    <div class="theme-toggle" onclick="toggleTheme()">
+                        <i class="fas fa-sun" id="themeIcon"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Welcome Message -->
+                    <div class="message-group">
+                        <div class="message ai-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">
+                                    <h3>Welcome to AI Invoice Assistant! 👋</h3>
+                                    <p>I'm here to help you manage products, create smart carts, and generate professional invoices. Here's what I can do:</p>
+
+                                    <p class="help-text">Try saying: <code>"Show all Products"</code> or <code>"add 5 cctv with 10% discount"</code> or <code>"show cart"</code></p> or <code>"Show Breakdown"</code> or <code>"Generate invoice"</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="typing-content">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <button class="attach-btn" onclick="openUploadModal()" title="Upload catalog">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <textarea 
+                            id="messageInput" 
+                            placeholder="Message AI Invoice Assistant..."
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane" id="sendIcon"></i>
+                            <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-upload"></i> Upload Product Catalog</h2>
+                <button class="modal-close" onclick="closeUploadModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Drag and drop your file here</h3>
+                    <p>or click to browse</p>
+                    <div class="file-types">
+                        <span class="file-type">.CSV</span>
+                        <span class="file-type">.XLSX</span>
+                        <span class="file-type">.XLS</span>
+                    </div>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
+                </div>
+                
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-info">
+                        <span id="fileName">Uploading...</span>
+                        <span id="uploadPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Modal -->
+    <div class="modal-overlay" id="clientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-user"></i> Client Details</h2>
+                <button class="modal-close" onclick="closeClientModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="clientForm" class="client-form">
+                    <div class="form-group">
+                        <label for="clientName">Client Name *</label>
+                        <input type="text" id="clientName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientEmail">Email</label>
+                        <input type="email" id="clientEmail" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPhone">Phone</label>
+                        <input type="tel" id="clientPhone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientAddress">Address</label>
+                        <textarea id="clientAddress" name="address" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientGST">GST Number</label>
+                            <input type="text" id="clientGST" name="gst_number">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientPlace">Place of Supply</label>
+                            <input type="text" id="clientPlace" name="place_of_supply">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeClientModal()">Cancel</button>
+                <button type="button" class="btn-primary" onclick="saveClientDetails()">
+                    <i class="fas fa-save"></i> Save Client
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="productsModal">
+    <div class="modal enhanced-modal large-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-boxes"></i> All Products</h3>
+            <button class="modal-close" onclick="closeProductsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="products-header">
+                <div class="products-search">
+                    <input type="text" id="productSearchInput" placeholder="Search products...">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="products-count" id="productsCount">
+                    Loading products...
+                </div>
+            </div>
+            <div class="products-loading" id="productsLoading">
+                <div class="loading-spinner"></div>
+                <p>Loading products...</p>
+            </div>
+            <div class="products-list" id="productsList">
+                <!-- Products will be loaded here dynamically -->
+            </div>
+            <div class="products-empty" id="productsEmpty" style="display: none;">
+                <i class="fas fa-box-open"></i>
+                <h4>No Products Found</h4>
+                <p>Upload a catalog or add products to get started.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="userGuideModal">
+    <div class="modal enhanced-modal large-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-book"></i> User Guide - AI Chat Commands</h3>
+            <button class="modal-close" onclick="closeUserGuideModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="guide-intro">
+                <p>Welcome to the AI Invoice Assistant! Use these commands to interact with the system efficiently.</p>
+            </div>
+            
+            <div class="guide-categories">
+                <!-- Product Management -->
+                <div class="guide-category">
+                    <h4><i class="fas fa-box"></i> Product Management</h4>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Add products to cart:</strong><br>
+                                <code>add 2 cctv</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('add 2 cctv')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Add products with discount:</strong><br>
+                                <code>add 2 cctv with 10% discount</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('add 2 cctv with 10% discount')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Remove products from cart:</strong><br>
+                                <code>remove [product name]</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('remove [product name]')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Discount Management -->
+                <div class="guide-category">
+                    <h4><i class="fas fa-percentage"></i> Discount Management</h4>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Apply discount to specific product:</strong><br>
+                                <code>apply 20% discount on [product name]</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('apply 20% discount on [product name]')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Apply discount to entire cart:</strong><br>
+                                <code>apply 30% discount on cart</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('apply 30% discount on cart')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cart Operations -->
+                <div class="guide-category">
+                    <h4><i class="fas fa-shopping-cart"></i> Cart Operations</h4>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>View cart contents:</strong><br>
+                                <code>show cart</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('show cart')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- <div class="command-item">
+                            <div class="command-text">
+                                <strong>Clear entire cart:</strong><br>
+                                <code>clear cart</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('clear cart')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div> -->
+                    </div>
+                </div>
+                
+                <!-- Invoice Generation -->
+                <div class="guide-category">
+                    <h4><i class="fas fa-file-invoice-dollar"></i> Invoice Generation</h4>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Set client details:</strong><br>
+                                Use the "Client Details" quick action button to fill in customer information before generating invoices.
+                            </div>
+                        </div>
+                        
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>Generate invoice:</strong><br>
+                                <code>generate invoice</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('generate invoice')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- General Commands -->
+                <div class="guide-category">
+                    <h4><i class="fas fa-cogs"></i> General Commands</h4>
+                    <div class="command-list">
+                        <!-- <div class="command-item">
+                            <div class="command-text">
+                                <strong>Get help:</strong><br>
+                                <code>help</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('help')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div> -->
+                        
+                        <div class="command-item">
+                            <div class="command-text">
+                                <strong>View all products:</strong><br>
+                                Use the "Show All Products" quick action button or type <code>show products</code>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('show products')" title="Copy to clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="guide-footer">
+                <p><strong>Tip:</strong> Click the copy button next to any command to copy it to your clipboard, then paste it in the chat input below.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeSidebar()"></div>
+
+    <script src="static\script.js"></script>
+</body>
+</html>

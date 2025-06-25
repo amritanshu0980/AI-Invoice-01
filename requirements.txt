@@ -1,0 +1,17 @@
+python-3.11.12
+flask==2.3.3
+flask-cors==4.0.0
+pandas==2.1.0
+openpyxl==3.1.2
+google-generativeai==0.3.0
+python-dotenv==1.0.0
+jinja2==3.1.2
+werkzeug==2.3.7
+gunicorn==21.2.0
+num2words==0.5.12
+pdfkit==1.0.0
+uuid==1.30
+numpy==1.26.4
+flask-socketio
+
+

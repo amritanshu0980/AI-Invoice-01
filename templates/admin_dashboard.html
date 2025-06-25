@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Invoice Assistant - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_users.css') }}">
+
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Loading Dashboard...</h3>
+            <p>Please wait while we fetch your data</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="dashboard-container" id="dashboardContainer">
+        <!-- Enhanced Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-section">
+                    <i class="fas fa-chart-line logo-icon"></i>
+                    <h2 class="logo-text">Admin Panel</h2>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="dashboard">
+                            <i class="fas fa-tachometer-alt nav-icon"></i>
+                            <span class="nav-text">Dashboard</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="products">
+                            <i class="fas fa-box nav-icon"></i>
+                            <span class="nav-text">Products</span>
+                            <span class="nav-badge" id="productCount">0</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="invoices">
+                            <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                            <span class="nav-text">Invoices</span>
+                            <span class="nav-badge" id="invoiceCount">0</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="users">
+                            <i class="fas fa-users nav-icon"></i>
+                            <span class="nav-text">Users</span>
+                            <span class="nav-badge" id="userCount">0</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="analytics">
+                            <i class="fas fa-chart-bar nav-icon"></i>
+                            <span class="nav-text">Analytics</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="settings">
+                            <i class="fas fa-cog nav-icon"></i>
+                            <span class="nav-text">Settings</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="adminName">Admin User</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="page-title">
+                        <h1 id="pageTitle">Dashboard Overview</h1>
+                        <span class="last-update" id="lastUpdate">Last updated: Never</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="refresh-btn" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <div class="auto-refresh-indicator" id="autoRefreshIndicator">
+                        <div class="refresh-progress"></div>
+                        <span class="refresh-text">Auto-refresh in <span id="refreshCountdown">30</span>s</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot online"></div>
+                        <span>Connected</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboardSection" class="content-section active">
+                    <!-- Key Metrics Cards -->
+                    <div class="metrics-grid">
+                        <div class="metric-card revenue-card" data-animate="slideInUp">
+                            <div class="metric-content">
+                                <div class="metric-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="metric-details">
+                                    <h3 class="metric-value" id="totalRevenue">₹0</h3>
+                                    <p class="metric-label">Total Revenue</p>
+                                    <div class="metric-change positive" id="revenueChange">
+                                        <i class="fas fa-arrow-up"></i>
+                                        <span>+12.5%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-chart">
+                                <canvas id="revenueSparkline" width="80" height="40"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="metric-card orders-card" data-animate="slideInUp" style="animation-delay: 0.1s">
+                            <div class="metric-content">
+                                <div class="metric-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="metric-details">
+                                    <h3 class="metric-value" id="totalOrders">0</h3>
+                                    <p class="metric-label">Total Orders</p>
+                                    <div class="metric-change positive" id="ordersChange">
+                                        <i class="fas fa-arrow-up"></i>
+                                        <span>+8.2%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-chart">
+                                <canvas id="ordersSparkline" width="80" height="40"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="metric-card products-card" data-animate="slideInUp" style="animation-delay: 0.2s">
+                            <div class="metric-content">
+                                <div class="metric-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="metric-details">
+                                    <h3 class="metric-value" id="totalProducts">0</h3>
+                                    <p class="metric-label">Total Products</p>
+                                    <div class="metric-change neutral" id="productsChange">
+                                        <i class="fas fa-minus"></i>
+                                        <span>0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-chart">
+                                <canvas id="productsSparkline" width="80" height="40"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="metric-card users-card" data-animate="slideInUp" style="animation-delay: 0.3s">
+                            <div class="metric-content">
+                                <div class="metric-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="metric-details">
+                                    <h3 class="metric-value" id="totalUsers">0</h3>
+                                    <p class="metric-label">Active Users</p>
+                                    <div class="metric-change positive" id="usersChange">
+                                        <i class="fas fa-arrow-up"></i>
+                                        <span>+5.1%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-chart">
+                                <canvas id="usersSparkline" width="80" height="40"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="charts-grid">
+                        <div class="chart-card main-chart" data-animate="fadeInUp">
+                            <div class="chart-header">
+                                <h3>Revenue Trends</h3>
+                                <div class="chart-controls">
+                                    <select id="revenueTimeframe" class="time-selector">
+                                        <option value="7d">Last 7 Days</option>
+                                        <option value="30d" selected>Last 30 Days</option>
+                                        <option value="90d">Last 3 Months</option>
+                                        <option value="1y">Last Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card secondary-chart" data-animate="fadeInUp" style="animation-delay: 0.2s">
+                            <div class="chart-header">
+                                <h3>Top Products</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-type-btn active" data-type="bar">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </button>
+                                    <button class="chart-type-btn" data-type="doughnut">
+                                        <i class="fas fa-chart-pie"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="productsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions & Recent Activity -->
+                    <div class="dashboard-bottom">
+                        <div class="quick-actions-card" data-animate="slideInLeft">
+                            <h3>Quick Actions</h3>
+                            <div class="actions-grid">
+                                <button class="action-btn primary" data-action="add-product">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Add Product</span>
+                                </button>
+                                <button class="action-btn secondary" data-action="upload-catalog">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Upload Catalog</span>
+                                </button>
+                                <button class="action-btn tertiary" data-action="export-data">
+                                    <i class="fas fa-download"></i>
+                                    <span>Export Data</span>
+                                </button>
+                                <button class="action-btn quaternary" data-action="view-reports">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>View Reports</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="recent-activity-card" data-animate="slideInRight">
+                            <h3>Recent Activity</h3>
+                            <div class="activity-list" id="recentActivity">
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-user-plus"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <p class="activity-text">New user registered</p>
+                                        <span class="activity-time">2 minutes ago</span>
+                                    </div>
+                                </div>
+                                <!-- More activity items will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Products Section -->
+                <section id="productsSection" class="content-section">
+                    <div class="section-header">
+                        <div class="header-left">
+                            <h2>Product Management</h2>
+                            <span class="section-subtitle">Manage your product inventory</span>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn-secondary" id="uploadCatalogBtn">
+                                <i class="fas fa-upload"></i>
+                                Upload Catalog
+                            </button>
+                            <button class="btn-primary" id="addProductBtn">
+                                <i class="fas fa-plus"></i>
+                                Add Product
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="products-container">
+                        <div class="products-filters">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="productSearch" placeholder="Search products...">
+                            </div>
+                            <div class="filter-controls">
+                                <select id="categoryFilter" class="filter-select">
+                                    <option value="">All Categories</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="security">Security</option>
+                                    <option value="networking">Networking</option>
+                                </select>
+                                <select id="stockFilter" class="filter-select">
+                                    <option value="">All Stock Levels</option>
+                                    <option value="in-stock">In Stock</option>
+                                    <option value="low-stock">Low Stock</option>
+                                    <option value="out-of-stock">Out of Stock</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="products-table-container">
+                            <table class="products-table" id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <input type="checkbox" id="selectAllProducts">
+                                        </th>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <!-- Products will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-pagination">
+                            <div class="pagination-info">
+                                Showing <span id="paginationStart">1</span> to <span id="paginationEnd">10</span> of <span id="paginationTotal">100</span> products
+                            </div>
+                            <div class="pagination-controls">
+                                <button class="pagination-btn" id="prevPage">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div class="pagination-numbers" id="paginationNumbers">
+                                    <!-- Page numbers will be populated by JavaScript -->
+                                </div>
+                                <button class="pagination-btn" id="nextPage">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Other sections will be added in separate files -->
+                <!-- Invoices Section -->
+                <section id="invoicesSection" class="content-section">
+                    <div class="section-header">
+                        <h2>Invoice Management</h2>
+                        <span class="section-subtitle">Track and manage all invoices</span>
+                    </div>
+                    <div class="coming-soon">
+                        <i class="fas fa-tools"></i>
+                        <h3>Invoice Management</h3>
+                        <p>This section is under development</p>
+                    </div>
+                </section>
+
+                <!-- Users Section -->
+                <section id="usersSection" class="content-section">
+                    <!-- Loading indicator while content loads -->
+                    <div class="section-loading" id="usersLoadingIndicator">
+                        <div class="loading-spinner"></div>
+                        <p>Loading User Management...</p>
+                    </div>
+                    <!-- Content will be loaded here dynamically -->
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="analyticsSection" class="content-section">
+                    <div class="section-header">
+                        <h2>Analytics & Reports</h2>
+                        <span class="section-subtitle">Detailed insights and reporting</span>
+                    </div>
+                    <div class="coming-soon">
+                        <i class="fas fa-chart-area"></i>
+                        <h3>Advanced Analytics</h3>
+                        <p>This section is under development</p>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settingsSection" class="content-section">
+                    <div class="section-header">
+                        <h2>Settings</h2>
+                        <span class="section-subtitle">Configure system settings</span>
+                    </div>
+                    <div class="coming-soon">
+                        <i class="fas fa-cogs"></i>
+                        <h3>System Settings</h3>
+                        <p>This section is under development</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Upload Catalog Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal enhanced-modal">
+            <div class="modal-header">
+                <h3>Upload Product Catalog</h3>
+                <button class="modal-close" id="closeUploadModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h4>Drag & Drop your file here</h4>
+                        <p>or click to browse</p>
+                        <div class="file-types">
+                            <span class="file-type">CSV</span>
+                            <span class="file-type">XLSX</span>
+                            <span class="file-type">XLS</span>
+                        </div>
+                        <input type="file" id="catalogFileInput" accept=".csv,.xlsx,.xls" hidden>
+                    </div>
+                </div>
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Uploading... 0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal-overlay" id="addProductModal">
+        <div class="modal enhanced-modal large-modal">
+            <div class="modal-header">
+                <h3>Add New Product</h3>
+                <button class="modal-close" id="closeAddProductModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addProductForm" class="product-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="productName">Product Name *</label>
+                            <input type="text" id="productName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Price (₹) *</label>
+                            <input type="number" id="productPrice" name="price" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productStock">Stock Quantity</label>
+                            <input type="number" id="productStock" name="stock" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="productGST">GST Rate (%)</label>
+                            <input type="number" id="productGST" name="gst_rate" step="0.01" value="18">
+                        </div>
+                        <div class="form-group">
+                            <label for="installationCharge">Installation Charge (₹)</label>
+                            <input type="number" id="installationCharge" name="installation_charge" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="serviceCharge">Service Charge (₹)</label>
+                            <input type="number" id="serviceCharge" name="service_charge" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingCharge">Shipping Charge (₹)</label>
+                            <input type="number" id="shippingCharge" name="shipping_charge" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="handlingFee">Handling Fee (₹)</label>
+                            <input type="number" id="handlingFee" name="handling_fee" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelAddProduct">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Logout Confirmation Modal for Admin Dashboard -->
+<div class="modal-overlay" id="adminLogoutModal">
+    <div class="modal logout-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-sign-out-alt"></i> Confirm Logout</h3>
+            <button class="modal-close" onclick="adminDashboard.closeLogoutModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="logout-confirmation">
+                <div class="logout-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4>Are you sure you want to logout?</h4>
+                <p>You will be redirected to the login page and your current admin session will end.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="adminDashboard.closeLogoutModal()">
+                <i class="fas fa-times"></i>
+                Cancel
+            </button>
+            <button type="button" class="btn-danger logout-confirm" onclick="adminDashboard.confirmLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+    <script src="static/js/admin_dashboard.js"></script>
+    <script src="static/js/admin_users.js"></script>
+
+</body>
+</html>

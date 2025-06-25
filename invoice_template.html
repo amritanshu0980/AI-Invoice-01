@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Invoice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border: 2px solid #000;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .header {
+      position: relative;
+      height: 80px;
+      margin-bottom: 20px;
+    }
+    .logo-left {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .logo-right {
+      position: absolute;
+      top: 150px;
+      right: 0;
+    }
+    .company-details {
+      text-align: left;
+      margin-top: 10px;
+    }
+    .company-details p {
+      margin: 2px 0;
+    }
+    .invoice-info {
+      margin-bottom: 20px;
+    }
+    .invoice-info p {
+      margin: 2px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 11px;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+      text-align: center;
+    }
+    /* Specific column widths to match screenshot */
+    .col-no { width: 8%; }
+    .col-products { width: 35%; text-align: left; }
+    .col-qty { width: 8%; }
+    .col-unit { width: 12%; }
+    .col-price { width: 18%; text-align: right; }
+    .col-total { width: 19%; text-align: right; }
+    
+    /* Total rows styling */
+    .total-row {
+      font-weight: bold;
+      background-color: #f8f8f8;
+    }
+    .total-row td {
+      text-align: right;
+      font-weight: bold;
+    }
+    .total-row .label-cell {
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .section-title {
+      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      border-top: 1px solid #000;
+      padding-top: 10px;
+    }
+    .notes, .bank-details, .terms {
+      margin-bottom: 20px;
+    }
+    .notes p, .bank-details p, .terms p {
+      margin: 2px 0;
+    }
+    .terms-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+    }
+    .terms-table td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 11px;
+    }
+    .terms-table .term-number {
+      width: 5%;
+      text-align: center;
+      font-weight: bold;
+    }
+    .footer {
+      text-align: left;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header with Logos -->
+    <div class="header">
+      <img src="C:\Users\bashu\OneDrive\Desktop\Zencia\ai_invoice_assistant\static\images\intelabode_logo.png" alt="Intelabode Logo" class="logo-left" style="height: 100px;">
+      <img src="C:\Users\bashu\OneDrive\Desktop\Zencia\ai_invoice_assistant\static\images\zf_logo.png" alt="ZF Logo" class="logo-right" style="height: 100px;">
+    </div>
+
+    <!-- Company Details (Static) -->
+    <div class="company-details">
+      <p><strong>A ZFIN TECH Private Limited</strong></p>
+      <p>101 First floor, Bombay Plaza, Vidhan Sabha Marg, Lucknow - 226001</p>
+      <p>Office: 9559050099, Technical Support: 9559050092, Sales: 9559050092</p>
+      <p>E-mail: 226010@gmail.com, zfintechprivatelimited@gmail.com</p>
+      <p>GST: Gst no. 09AACCZ4134D1ZG, PAN: AACCZ4134D</p>
+    </div>
+
+    <!-- Invoice Info (Dynamic) -->
+    <div class="invoice-info">
+      <p><strong>CLIENT:</strong> {{ client.name }}</p>
+      <p><strong>ADDRESS:</strong> {{ client.address }}</p>
+      <p><strong>GST NUMBER:</strong> {{ client.gst_number }}</p>
+      <p><strong>PLACE OF SUPPLY:</strong> {{ client.place_of_supply }}</p>
+      <p><strong>PROJECT:</strong> {{ project_name }}</p>
+      <p><strong>DATE:</strong> {{ invoice_date }}</p>
+    </div>
+
+    <!-- Itemized Table (Static Headers, Dynamic Rows) -->
+    <table>
+      <thead>
+        <tr>
+          <th class="col-no">NO</th>
+          <th class="col-products">Products</th>
+          <th class="col-qty">Qty</th>
+          <th class="col-unit">UNIT</th>
+          <th class="col-price">PRICE EXC GST</th>
+          <th class="col-total">TOTAL EXC GST</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in invoice["items"] %}
+        <tr>
+          <td class="col-no">{{ loop.index }}</td>
+          <td class="col-products">
+            {{ item.name }}
+          </td>
+          <td class="col-qty">{{ item.qty }}</td>
+          <td class="col-unit">Nos</td>
+          <td class="col-price">
+            {% if item.discount > 0 %}
+            <strike style="color: #999;">&#8377;{{ "%.0f"|format(item.unit_price) }}</strike><br>
+            &#8377;{{ "%.0f"|format(item.unit_price * (1 - item.discount/100)) }}
+            {% else %}
+            &#8377;{{ "%.0f"|format(item.unit_price) }}
+            {% endif %}
+          </td>
+          <td class="col-total">&#8377;{{ "%.0f"|format(item.total_amount) }}</td>
+        </tr>
+        {% endfor %}
+        
+        <!-- Subtotal Row -->
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">SUBTOTAL (EXC GST)</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.subtotal) }}</td>
+        </tr>
+        
+        <!-- Additional Charges Rows -->
+        {% if invoice.summary.total_installation > 0 %}
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">TOTAL INSTALLATION CHARGES</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.total_installation) }}</td>
+        </tr>
+        {% endif %}
+        
+        {% if invoice.summary.total_service > 0 %}
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">TOTAL SERVICE CHARGES</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.total_service) }}</td>
+        </tr>
+        {% endif %}
+        
+        {% if invoice.summary.total_shipping > 0 %}
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">TOTAL SHIPPING CHARGES</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.total_shipping) }}</td>
+        </tr>
+        {% endif %}
+        
+        {% if invoice.summary.total_handling > 0 %}
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">TOTAL HANDLING CHARGES</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.total_handling) }}</td>
+        </tr>
+        {% endif %}
+        
+        <!-- Total Before GST Row -->
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">TOTAL BEFORE GST</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.total_ex_gst) }}</td>
+        </tr>
+        
+        <!-- GST Row -->
+        <tr class="total-row">
+          <td colspan="4" class="label-cell">GST ({{ invoice.summary.gst_rate }}%)</td>
+          <td></td>
+          <td>&#8377;{{ "%.0f"|format(invoice.summary.total_gst) }}</td>
+        </tr>
+        
+        <!-- Overall Discount Row (if applicable) -->
+        {% if invoice.summary.overall_discount > 0 %}
+        <tr class="total-row" style="background-color: #e8f5e8;">
+          <td colspan="4" class="label-cell">OVERALL DISCOUNT ({{ invoice.summary.overall_discount }}%)</td>
+          <td></td>
+          <td style="color: green;">-&#8377;{{ "%.0f"|format(invoice.summary.overall_discount_amount) }}</td>
+        </tr>
+        {% endif %}
+        
+        <!-- Grand Total Row -->
+        <tr class="total-row" style="background-color: #f0f0f0; font-size: 13px;">
+          <td colspan="4" class="label-cell"><strong>GRAND TOTAL</strong></td>
+          <td></td>
+          <td><strong>&#8377;{{ "%.0f"|format(invoice.summary.grand_total) }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Notes (Static) -->
+    <div class="notes">
+      <p class="section-title">Note:-</p>
+      <p>a. Cable, Cable Laying, Power Point will be provided by client.</p>
+      <p>b. Any extra material required at the time of installation will charge extra as actual.</p>
+    </div>
+
+    <!-- Bank Details (Static) -->
+    <div class="bank-details">
+      <p class="section-title">BANK DETAILS:</p>
+      <p>ZFIN TECH PVT LTD A/C Zototech AI</p>
+      <p>A/C NO- 50200102870217, BANK- HDFC BANK, IFSC- HDFC0001267, LUCKNOW</p>
+    </div>
+
+    <!-- Terms and Conditions (Static) -->
+    <div class="terms">
+      <p class="section-title">Terms and Conditions:-</p>
+      <table class="terms-table">
+        <tr>
+          <td class="term-number">1</td>
+          <td>All above prices are supply only Ex-LUCKNOW, Exclusive of GST and any other levies if applicable. Prices are subject to exchange rate fluctuations.</td>
+        </tr>
+        <tr>
+          <td class="term-number">2</td>
+          <td>Warranty: One year warranty from the date of supply of materials.</td>
+        </tr>
+        <tr>
+          <td class="term-number">3</td>
+          <td>Payment: 100% advance.</td>
+        </tr>
+        <tr>
+          <td class="term-number">4</td>
+          <td>Regulated and Stabilized Power should be available at the site and it is preferred to have a separate stabilized power for the above systems. All Electrical, Carpentary, Civil work will not be in our scope. You should provide required electrical powerpoints or cables at site/locations.</td>
+        </tr>
+        <tr>
+          <td class="term-number">5</td>
+          <td>Delivery Period: Ex-Stock and if not please consider delivery within 4 to 5 weeks from the date of order.</td>
+        </tr>
+        <tr>
+          <td class="term-number">6</td>
+          <td>Validity: 15 days from today</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Footer (Static) -->
+    <div class="footer">
+      <p>Thanks and Regards,</p>
+      <p>INTELABODE</p>
+      <p>ZFIN TECH Private Limited</p>
+    </div>
+  </div>
+</body>
+</html>

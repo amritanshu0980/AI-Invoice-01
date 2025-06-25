@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tax Invoice</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        margin: 40px;
+        color: #000;
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+      }
+
+      .section {
+        margin-bottom: 10px;
+      }
+
+      .details {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .details td {
+        vertical-align: top;
+        padding: 4px 8px;
+      }
+
+      table.invoice-table,
+      table.summary-table,
+      table.tax-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      table.invoice-table th,
+      table.invoice-table td,
+      table.tax-table th,
+      table.tax-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: left;
+      }
+
+      table.invoice-table th {
+        background-color: #f0f0f0;
+      }
+
+      .right {
+        text-align: right;
+      }
+
+      .bold {
+        font-weight: bold;
+      }
+
+      .note {
+        font-size: 10px;
+        color: #555;
+      }
+
+      .footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 10px;
+        border-top: 1px solid #000;
+        padding-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Tax Invoice</h2>
+
+    <table class="details" border="0">
+      <tr>
+        <td width="50%">
+          <strong>{{ seller.name }}</strong><br />
+          {{ seller.address }}<br />
+          GSTIN/UIN: {{ seller.gstin }}
+        </td>
+        <td width="50%">
+          <table border="0" width="100%">
+            <tr>
+              <td><strong>Invoice No.:</strong></td>
+              <td>{{ invoice_number }}</td>
+            </tr>
+            <tr>
+              <td><strong>Dated:</strong></td>
+              <td>{{ invoice_date }}</td>
+            </tr>
+            <tr>
+              <td><strong>Supplier Ref:</strong></td>
+              <td>{{ supplier_ref }}</td>
+            </tr>
+            <tr>
+              <td><strong>Other Ref:</strong></td>
+              <td>{{ other_ref }}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table class="details" border="0">
+      <tr>
+        <td width="50%">
+          <strong>Buyer</strong><br />
+          {{ client.name }}<br />
+          {{ client.address }}<br />
+          GSTIN: {{ client.gst_number }}<br />
+          Place of Supply: {{ client.place_of_supply }}
+        </td>
+        <td></td>
+      </tr>
+    </table>
+
+    <table class="invoice-table">
+      <tr>
+        <th>Sr</th>
+        <th>Description of Goods</th>
+        <th>HSN/SAC</th>
+        <th>GST Rate</th>
+        <th>Qty</th>
+        <th>Rate</th>
+        <th>Disc.</th>
+        <th>Amount</th>
+      </tr>
+      {% for item in invoice["items"] %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ item.name }}</td>
+        <td>NA</td>
+        <td>{{ item.gst_rate }}%</td>
+        <td>{{ item.qty }}</td>
+        <td class="right">{{ "%.2f"|format(item.unit_price) }}</td>
+        <td class="right">{{ item.discount_percent }}%</td>
+        <!-- FIXED: Use calculated_total instead of total -->
+        <td class="right">{{ "%.2f"|format(item.calculated_total) }}</td>
+      </tr>
+      {% endfor %}
+
+      <tr>
+        <td colspan="7" class="right bold">Subtotal</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].subtotal) }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="right bold">GST</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].total_gst) }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="right bold">Installation</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].total_installation) }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="right bold">Service</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].total_service) }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="right bold">Shipping</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].total_shipping) }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="right bold">Handling</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].total_handling) }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="right bold">Grand Total</td>
+        <td class="right">{{ "%.2f"|format(invoice["summary"].grand_total) }}</td>
+      </tr>
+    </table>
+
+    <p><strong>Amount in Words:</strong> INR {{ amount_in_words }}</p>
+
+    <table class="tax-table">
+      <tr>
+        <th>HSN/SAC</th>
+        <th>Taxable Value</th>
+        <th>Central Tax</th>
+        <th>State Tax</th>
+      </tr>
+      {% for item in invoice["items"] %}
+      <tr>
+        <td>NA</td>
+        <td>{{ "%.2f"|format(item.discounted_price * item.qty) }}</td>
+        <td>{{ "%.2f"|format(item.gst_amount / 2) }}</td>
+        <td>{{ "%.2f"|format(item.gst_amount / 2) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <p><strong>Tax Amount in words:</strong> INR {{ tax_in_words }}</p>
+
+    <p class="note">
+      Declaration: We declare that this invoice shows the actual price of the
+      goods described and that all particulars are true and correct.
+    </p>
+
+    <div class="footer">
+      For {{ seller.name }}<br /><br />
+      Authorised Signatory
+    </div>
+  </body>
+</html>
